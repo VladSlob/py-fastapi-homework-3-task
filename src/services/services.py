@@ -143,10 +143,7 @@ class PasswordResetService:
             token: str,
             password: str
     ) -> dict:
-        try:
-            user = await self.validate_reset_token(email, token)
 
-            await self.user_crud.update_password(user, password)
 
             reset_token = await self.password_reset_token_crud.get_by_token(
                 token
