@@ -52,10 +52,7 @@ class UserCRUD:
     async def update_password(
             self,
             user: UserModel,
-            new_password: str
-    ) -> UserModel:
-        try:
-            user.password = new_password
+
             await self.db.commit()
             await self.db.refresh(user)
             return user
