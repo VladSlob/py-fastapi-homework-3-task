@@ -49,6 +49,29 @@ class UserCRUD:
         user = stmt_result.scalar_one_or_none()
         return user
 
+    async def update_password(
+            self,
+            user: UserModel,
+            new_password: str
+    ) -> UserModel:
+        try:
+            user.password = new_password
+            await self.db.commit()
+            await self.db.refresh(user)
+            return user
+        except ValueError as e:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid password: {str(e)}"
+            )
+        except Exception:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail="An error occurred while resetting the password."
+            )
+
 
 class ActivationTokenCRUD:
     def __init__(self, db: AsyncSession):
