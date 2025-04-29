@@ -143,6 +143,34 @@ class PasswordResetService:
             token: str,
             password: str
     ) -> dict:
+        try:
+            user = await self.validate_reset_token(email, token)
+
+            await self.user_crud.update_password(user, password)
+
+            reset_token = await self.password_reset_token_crud.get_by_token(
+                token
+            )
+            if reset_token:
+                await self.password_reset_token_crud.delete_tokens(
+                    [reset_token]
+                )
+
+            await self.db.commit()
+            # TODO: Implement email sending logic here (e.g., send reset link with reset_token.token)
+
+            return {"message": "Password reset successfully."}
+        except HTTPException as e:
+            await self.db.rollback()
+            raise e
+        except Exception as e:
+            await self.db.rollback()
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while resetting the password:"
+                       f" {str(e)}"
+            )
+
 
 class AuthService:
     def __init__(
