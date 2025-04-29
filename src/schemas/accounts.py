@@ -1,32 +1,30 @@
-from pydantic import BaseModel, field_validator, EmailStr
+from pydantic import BaseModel, EmailStr, AfterValidator
+from typing import Annotated
 
 from database import accounts_validators
 
 
 class UserRegistrationRequestSchema(BaseModel):
-    email: EmailStr
-    password: str
-
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, value: str) -> str:
-        return accounts_validators.validate_email(value)
-
-    @field_validator("password")
-    @classmethod
-    def validate_password(cls, value: str) -> str:
-        return accounts_validators.validate_password_strength(value)
+    email: Annotated[
+        EmailStr,
+        AfterValidator(accounts_validators.validate_email)
+    ]
+    password: Annotated[
+        str,
+        AfterValidator(accounts_validators.validate_password_strength)
+    ]
 
 
 class UserRegistrationResponseSchema(BaseModel):
     id: int
     email: str
 
-    model_config = {"from_attributes": True}
-
 
 class UserActivationRequestSchema(BaseModel):
-    email: str
+    email: Annotated[
+        EmailStr,
+        AfterValidator(accounts_validators.validate_email)
+    ]
     token: str
 
 
@@ -35,15 +33,22 @@ class MessageResponseSchema(BaseModel):
 
 
 class PasswordResetRequestSchema(BaseModel):
-    email: str
+    email: Annotated[
+        EmailStr,
+        AfterValidator(accounts_validators.validate_email)
+    ]
 
 
-class PasswordResetCompleteRequestSchema(UserRegistrationRequestSchema):
+class PasswordResetCompleteRequestSchema(BaseModel):
+    email: Annotated[
+        EmailStr,
+        AfterValidator(accounts_validators.validate_email)
+    ]
     token: str
-
-
-class UserLoginRequestSchema(UserRegistrationRequestSchema):
-    pass
+    password: Annotated[
+        str,
+        AfterValidator(accounts_validators.validate_password_strength)
+    ]
 
 
 class UserLoginResponseSchema(BaseModel):
@@ -51,7 +56,16 @@ class UserLoginResponseSchema(BaseModel):
     refresh_token: str
     token_type: str
 
-    model_config = {"from_attributes": True}
+
+class UserLoginRequestSchema(BaseModel):
+    email: Annotated[
+        EmailStr,
+        AfterValidator(accounts_validators.validate_email)
+    ]
+    password: Annotated[
+        str,
+        AfterValidator(accounts_validators.validate_password_strength)
+    ]
 
 
 class TokenRefreshRequestSchema(BaseModel):
@@ -60,5 +74,3 @@ class TokenRefreshRequestSchema(BaseModel):
 
 class TokenRefreshResponseSchema(BaseModel):
     access_token: str
-
-    model_config = {"from_attributes": True}
